@@ -1,8 +1,15 @@
 # importations
-import requests
 import bs4
 import html5lib
 import csv
+import time
+from selenium import webdriver
+
+# setting up driver to get the URL
+options = webdriver.ChromeOptions()
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+driver = webdriver.Chrome(executable_path=r"C:\webdrivers\chromedriver.exe",options=options)
 
 # create csv file
 file = open('books.csv','wt')
@@ -36,9 +43,19 @@ all_links = ['/0/new-arrivals',
 for link in all_links:
     url = base_link + link
 
-    page = requests.get(url)
+    driver.get(url)
 
-    soup = bs4.BeautifulSoup(page.content,'html5lib')
+    # for scrolling till page end
+    page_len = driver.execute_script("window.scrollTo(0, document.body.scrollHeight);var page_len=document.body.scrollHeight;return page_len;")
+    stop = False
+    while(stop==False):
+        last_count = page_len
+        time.sleep(3)
+        page_len = driver.execute_script("window.scrollTo(0, document.body.scrollHeight);var page_len=document.body.scrollHeight;return page_len;")
+        if last_count==page_len:
+            stop = True
+
+    soup = bs4.BeautifulSoup(driver.page_source,'html5lib')
 
     # find all book elements on the page
     items = soup.find_all(class_='list-view-books')
